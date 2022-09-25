@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Carnac.Logic
@@ -101,7 +103,12 @@ namespace Carnac.Logic
 
         public static string Sanitise(this Keys key)
         {
-            return Replacements.ContainsKey(key) ? Replacements[key] : string.Format(key.ToString());
+            return KeyCodeToUnicode(key);
+        }
+
+        public static string SanitiseLower(this Keys key)
+        {
+            return KeyCodeToUnicode(key, lowerOnly: true);
         }
 
         public static bool SanitiseShift(this Keys key, out string sanitisedKeyInput)
@@ -115,5 +122,38 @@ namespace Carnac.Logic
             sanitisedKeyInput = key.Sanitise();
             return false;
         }
+
+        public static string KeyCodeToUnicode(Keys key, bool lowerOnly = false)
+        {
+            byte[] keyboardState = new byte[255];
+            if (!lowerOnly)
+            {
+                bool keyboardStateStatus = GetKeyboardState(keyboardState);
+                if (!keyboardStateStatus) return "";
+            }
+
+            uint virtualKeyCode = (uint)key;
+            uint scanCode = MapVirtualKey(virtualKeyCode, uMapType: 0);
+            IntPtr inputLocaleIdentifier = GetKeyboardLayout(idThread: 0);
+
+            StringBuilder result = new StringBuilder();
+            ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, cchBuff: 5, wFlags: 0, inputLocaleIdentifier);
+
+            return result.ToString();
+        }
+
+        [DllImport(dllName: "user32.dll")]
+        private static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport(dllName: "user32.dll")]
+        private static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport(dllName: "user32.dll")]
+        private static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport(dllName: "user32.dll")]
+        private static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
+                                              [Out] [MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff,
+                                              int cchBuff, uint wFlags, IntPtr dwhkl);
     }
 }

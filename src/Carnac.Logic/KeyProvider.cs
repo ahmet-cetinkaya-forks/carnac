@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Windows.Media;
 using Carnac.Logic.KeyMonitor;
 using Carnac.Logic.Models;
 using Microsoft.Win32;
-using System.Windows.Media;
 using SettingsProviderNet;
-using System.Text.RegularExpressions;
 
 namespace Carnac.Logic
 {
@@ -173,22 +171,11 @@ namespace Carnac.Logic
                 if (shiftPressed)
                     yield return "Shift";
 
-                yield return interceptKeyEventArgs.Key.Sanitise();
+                yield return interceptKeyEventArgs.Key.SanitiseLower();
             }
             else
             {
-                string input;
-                var shiftModifiesInput = interceptKeyEventArgs.Key.SanitiseShift(out input);
-
-                if (!isLetter && !shiftModifiesInput && shiftPressed)
-                    yield return "Shift";
-
-                if (interceptKeyEventArgs.ShiftPressed && shiftModifiesInput)
-                    yield return input;
-                else if (isLetter && !interceptKeyEventArgs.ShiftPressed)
-                    yield return interceptKeyEventArgs.Key.ToString().ToLower();
-                else
-                    yield return interceptKeyEventArgs.Key.Sanitise();
+                yield return interceptKeyEventArgs.Key.Sanitise();
             }
         }
     }
