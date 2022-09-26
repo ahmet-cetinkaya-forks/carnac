@@ -80,6 +80,27 @@ namespace Carnac.Logic
             {Keys.RShiftKey, "Shift"},
             {Keys.LWin, "Win"},
             {Keys.RWin, "Win"},
+
+        private static readonly Dictionary<Keys, string> SpecialCases = new Dictionary<Keys, string>
+        {
+            { Keys.Divide, " / " },
+            { Keys.Multiply, " * " },
+            { Keys.Subtract, " - " },
+            { Keys.Add, " + " },
+            { Keys.Shift, "Shift" },
+            { Keys.ShiftKey, "Shift" },
+            { Keys.LShiftKey, "Shift" },
+            { Keys.RShiftKey, "Shift" },
+            { Keys.LWin, "Win" },
+            { Keys.RWin, "Win" },
+            { Keys.LControlKey, "Ctrl" },
+            { Keys.RControlKey, "Ctrl" },
+            { Keys.Alt, "Alt" },
+            { Keys.LMenu, "Alt" },
+            { Keys.Tab, "Tab" },
+            { Keys.Back, "Back" },
+            { Keys.Return, "Return" },
+            { Keys.Escape, "Escape" }
         };
 
         public static Keys? ToKey(string keyText)
@@ -103,12 +124,18 @@ namespace Carnac.Logic
 
         public static string Sanitise(this Keys key)
         {
-            return KeyCodeToUnicode(key);
+            if (SpecialCases.ContainsKey(key)) return SpecialCases[key];
+            string result = KeyCodeToUnicode(key);
+            if (result.Length > 0) return result;
+            return key.ToString();
         }
 
         public static string SanitiseLower(this Keys key)
         {
-            return KeyCodeToUnicode(key, lowerOnly: true);
+            if (SpecialCases.ContainsKey(key)) return SpecialCases[key];
+            string result = KeyCodeToUnicode(key, lowerOnly: true);
+            if (result.Length > 0) return result;
+            return key.ToString();
         }
 
         public static bool SanitiseShift(this Keys key, out string sanitisedKeyInput)
